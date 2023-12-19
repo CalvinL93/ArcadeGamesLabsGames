@@ -5,3 +5,9 @@ A simple game where you are being chased and you have to make it out of the dese
 ### Instructions
 
 - Play the game by choosing a,b,c,d,e or q to quit
+
+#### Lesson
+http://programarcadegames.com/index.php?lang=en&chapter=loops
+
+#### Lab
+http://programarcadegames.com/index.php?lang=en&chapter=lab_camel

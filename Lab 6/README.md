@@ -17,3 +17,9 @@ use loops in python to output data in certain formats
 ### Part 4
 
 - Create a grid in pygame
+
+#### Lesson
+http://programarcadegames.com/index.php?lang=en&chapter=back_to_looping
+
+#### Lab
+http://programarcadegames.com/index.php?lang=en&chapter=lab_loopy_lab

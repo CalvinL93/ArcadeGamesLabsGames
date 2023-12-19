@@ -14,3 +14,9 @@ Using float to make sure entered data is considered a number
 ### Instructions
 
 - simply run all files and input data
+
+#### Lesson
+http://programarcadegames.com/index.php?lang=en&chapter=python_as_calculator
+
+#### Lab
+http://programarcadegames.com/index.php?lang=en&chapter=lab_calculator
