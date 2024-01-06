@@ -10,10 +10,13 @@ BLUE = (0, 0 , 255)
  
 pygame.init()
 
-
 # Set the width and height of the screen [width, height]
 size = (255, 255)
 screen = pygame.display.set_mode(size)
+
+# for later use on differet screen sizes
+# resized_screen = pygame.transform.scale(screen, (windoWidth,windowHeight)) 
+# window.blit(resized_screen, (0, 0)
 
 WIDTH = 20
 HEIGHT = 20
@@ -39,12 +42,20 @@ for row in range(10):
         grid[row].append(0)
 
 # Create mines
-for i in range(10):
-    grid[random.randrange(0,10)][random.randrange(0,10)] = 10
+mines = 0
+i = 0
+while i < 10:
+#for i in range(10):
+    x = random.randrange(0,10)
+    y = random.randrange(0,10)
+    if grid[x][y] != 10:
+        grid[x][y] = 10
+        mines += 1
+        i += 1
+    else:
+        i -= 1
 
-# grid[9][0] = 10
-# grid[9][9] = 10
-
+# Add numbers to surrounding bomb locations
 for row in range(10):
     for column in range(10):
         if grid[row][column] >= 10:
@@ -65,32 +76,35 @@ for row in range(10):
             if row > 0 and column > 0 and not grid[row - 1][column - 1] == 10:
                 grid[row - 1][column - 1] += 1
 
+# Display grid in console
 for row in range(10):
     for column in range(10):
         print(grid[row][column], end=" ") 
     print()
 
+# Find a location with no bomb for game start
 for row in range(10):
     for column in range(10):
         if grid[row][column] == 0:
             xSafe = row
             ySafe = column
+
 pygame.display.set_caption("My Game")
 
+revealed = 0
+
+# Function to reveal surrounding squares
 def check_adjacent_cells(x, y):
-    # if grid[x - 1][y] == 0:
-    #     grid[x - 1][y] -= 10
-    #     check_adjacent_cells(x - 1, y)
     for i in (-1, 0, 1):
         for j in (-1, 0, 1):
             if x + i >= 0 and y + j >= 0 and x + i <= 9 and y + j <= 9:
                 if grid[x + i][y + j] == 0:
                     grid[x + i][y + j] = 9
                     check_adjacent_cells(x + i, y + j)
-                # if grid[x + i][y + j] > 0:
-                #     grid[x][y] *= -1
-                
-                
+                    #revealed += 1
+                if grid[x + i][y + j] > 0 and grid[x + i][y + j] < 9:
+                    grid[x + i][y + j] *= -1
+                    #revealed += 1       
 
 # Loop until the user clicks the close button.
 done = False
@@ -127,6 +141,19 @@ while not done:
                 grid[x][y] *= -1
                 xSafe = x
                 ySafe = y
+
+            # If left click revealed tile reveal surrounding tiles even if one is a bomb
+            elif grid[x][y] < 0:
+                for i in (-1, 0, 1):
+                    for j in (-1, 0, 1):
+                        if x + i >= 0 and y + j >= 0 and x + i <= 9 and y + j <= 9:
+                            if grid[x + i][y + j] == 10:
+                                print("Game Over")
+                                done = True
+                            elif grid[x + i][y + j] == 0:
+                                check_adjacent_cells(x, y)
+                            elif grid[x + i][y + j] > 0 and grid[x + i][y + j] < 9:
+                                grid[x + i][y + j] *= -1
             
             # If square is empty reveal surrounding empty squares
             elif grid[x][y] == 0:
@@ -162,12 +189,12 @@ while not done:
     text = ""
     
     # If all mines found end game
-    if mineCount == 0:
+    if (100 - mines) == revealed:
         print("You Win")
         pygame.time.wait(5000)
         done = True
         
-    
+    print(revealed)
     
  
     # --- Screen-clearing code goes here
@@ -178,7 +205,7 @@ while not done:
     
  
     # --- Drawing code should go here
-    
+    revealed = 0
     
     for row in range(10):
         for column in range(10):
@@ -187,6 +214,7 @@ while not done:
             # Change background to white for all empty squares that have been clicked on
             if grid[row][column] == 9 :
                 color = WHITE
+                revealed += 1
 
             # Flag possible bomb location
             if grid[row][column] > 10:
@@ -195,6 +223,7 @@ while not done:
             # Change background to white if square has been clicked on
             if grid[row][column] < 0:
                 color = WHITE
+                revealed += 1
 
             # Draw grid
             pygame.draw.rect(screen,
@@ -209,12 +238,12 @@ while not done:
                 text = font.render(str(abs(grid[row][column])), True, BLACK)
                 text_rect = text.get_rect(center=((column * 25) + WIDTH // 2 + 5, (row * 25) + HEIGHT // 2 + 5))
                 screen.blit(text, text_rect)
-                
+
     # --- Go ahead and update the screen with what we've drawn.
     pygame.display.flip()
  
-    # --- Limit to 60 frames per second
-    clock.tick(60)
+    # --- Limit to 10 frames per second
+    clock.tick(10)
  
 # Close the window and quit.
 pygame.quit()
