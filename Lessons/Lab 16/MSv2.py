@@ -48,21 +48,21 @@ for i in range(10):
 for row in range(10):
     for column in range(10):
         if grid[row][column] >= 10:
-            if row < 9:
+            if row < 9 and not grid[row + 1][column] == 10:
                 grid[row + 1][column] += 1
-            if column < 9:
+            if column < 9 and not grid[row][column + 1] == 10:
                 grid[row][column + 1] += 1
-            if row > 0:
+            if row > 0 and not grid[row - 1][column] == 10:
                 grid[row - 1][column] += 1
-            if column > 0:
+            if column > 0 and not grid[row][column - 1] == 10:
                 grid[row][column - 1] += 1
-            if row < 9 and column < 9:
+            if row < 9 and column < 9 and not grid[row + 1][column + 1] == 10:
                 grid[row + 1][column + 1] += 1
-            if row < 9 and column > 0:
+            if row < 9 and column > 0 and not grid[row + 1][column - 1] == 10:
                 grid[row + 1][column - 1] += 1
-            if row > 0 and column < 9:
+            if row > 0 and column < 9 and not grid[row - 1][column + 1] == 10:
                 grid[row - 1][column + 1] += 1
-            if row > 0 and column > 0:
+            if row > 0 and column > 0 and not grid[row - 1][column - 1] == 10:
                 grid[row - 1][column - 1] += 1
 
 for row in range(10):
@@ -85,7 +85,7 @@ def check_adjacent_cells(x, y):
         for j in (-1, 0, 1):
             if x + i >= 0 and y + j >= 0 and x + i <= 9 and y + j <= 9:
                 if grid[x + i][y + j] == 0:
-                    grid[x + i][y + j] -= 10
+                    grid[x + i][y + j] = 9
                     check_adjacent_cells(x + i, y + j)
                 # if grid[x + i][y + j] > 0:
                 #     grid[x][y] *= -1
@@ -95,7 +95,6 @@ def check_adjacent_cells(x, y):
 # Loop until the user clicks the close button.
 done = False
 mineCount = 10
-gameStarted = False
  
 # Used to manage how fast the screen updates
 clock = pygame.time.Clock()
@@ -105,7 +104,6 @@ while not done:
     # --- Main event loop
     x = xSafe
     y = ySafe
-    flagged = False
 
 
     for event in pygame.event.get():
@@ -118,63 +116,53 @@ while not done:
             y = pos[0] // 25
             x = pos[1] // 25
             print("Click: (%s,%s) Value: %s"%(x,y,grid[x][y]))
-            gameStarted = True
+
+            # If left click on bomb game over
+            if grid[x][y] == 10:
+                print("Game Over")
+                done = True
+            
+            # If next to bomb make number negative to later check and reveal
+            elif grid[x][y] > 0 and grid[x][y] < 9:
+                grid[x][y] *= -1
+                xSafe = x
+                ySafe = y
+            
+            # If square is empty reveal surrounding empty squares
+            elif grid[x][y] == 0:
+                grid[x][y] = 9
+                xSafe = x
+                ySafe = y
+                check_adjacent_cells(x, y)
 
         # Right Click
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == RIGHT:
             pos = pygame.mouse.get_pos()
             y = pos[0] // 25
             x = pos[1] // 25
-            flagged = True
             print("Bomb Marked")
-            gameStarted = True
+
+            # Mark only squares that are unrevaled as possible bomb locations
+            if grid[x][y] == 10:
+                grid[x][y] = 20
+            elif grid[x][y] < 9 and grid[x][y] > 0:
+                grid[x][y] += 10
+            elif grid[x][y] == 20:
+                grid[x][y] = 10
+            elif grid[x][y] < 20 and grid[x][y] > 10:
+                grid[x][y] -= 10
+
             
     # If you want a background image, replace this clear with blit'ing the
     # background image.
     screen.fill(BLACK)
 
     # --- Game logic should go here
-    # y = pos[0] // 25
-    # x = pos[1] // 25
 
     text = ""
-
-    # If left click on bomb game over
-    if grid[x][y] >= 10 and flagged == False:
-        print("Game Over")
-        done = True
-
-    # If left click on square next to bomb mark it with value
-    elif grid[x][y] > 0 and flagged == False:
-        grid[x][y] *= -1
-        xSafe = x
-        ySafe = y
-        #gameStarted = True
-        # text = font.render(str(grid[x][y]), True, BLACK)
-        # text_rect = text.get_rect(center=((y * 25) + WIDTH // 2, (x * 25) + HEIGHT // 2))
-        # screen.blit(text, text_rect)
     
-    elif grid[x][y] == 0 and flagged == False and gameStarted == True:
-        grid[x][y] -= 10
-        xSafe = x
-        ySafe = y
-        #gameStarted = True
-        check_adjacent_cells(x, y)
-
-    # if a mine is flagged check to see if it is an actual mine and decrement mineCount change value for flag
-    elif flagged == True and gameStarted == True:
-        if grid[x][y] >= 10 and grid[x][y] < 20:
-            mineCount -= 1
-        color = RED
-        if grid[x][y] == -10:
-            grid[x][y] = 0
-        grid[x][y] += 20
-        # xSafe = x
-        # ySafe = y
-        #gameStarted = True
-    
-    # if all mines found end game
-    elif mineCount == 0:
+    # If all mines found end game
+    if mineCount == 0:
         print("You Win")
         pygame.time.wait(5000)
         done = True
@@ -196,33 +184,19 @@ while not done:
         for column in range(10):
             color = (170, 170, 170)
 
-            # For Testing Purposes colors squares based on value
-            # if grid[row][column] == 10:
-            #     color = RED
-            # if grid[row][column] < 10 and grid[row][column] > 5:
-            #     color = BLUE
-            # if grid[row][column] < 6 and grid[row][column] > 3:
-            #     color = (188, 32, 199)
-            # if grid[row][column] < 4 and grid[row][column] > 1:
-            #     color = (32, 199, 177)
-            # if grid[row][column] == 1:
-            #     color = (199, 163, 32)
-
-            if grid[row][column] < 0:
+            # Change background to white for all empty squares that have been clicked on
+            if grid[row][column] == 9 :
                 color = WHITE
 
             # Flag possible bomb location
-            if grid[row][column] >= 20:
+            if grid[row][column] > 10:
                 color = RED
             
-            # Unflag Possible bomb location
-            if grid[row][column] >= 40:
+            # Change background to white if square has been clicked on
+            if grid[row][column] < 0:
                 color = WHITE
-                grid[row][column] -= 50
 
-            if grid[row][column] == 40:
-                grid[row][column] -= 50
-
+            # Draw grid
             pygame.draw.rect(screen,
                             color,
                             [(MARGIN + WIDTH) * column + MARGIN,
@@ -230,16 +204,12 @@ while not done:
                             WIDTH,
                             HEIGHT])
             
-            # Ouputs number in box if it is next to a bomb
-            if grid[row][column] < 0 and grid[row][column] > -10:
+            # Ouputs number in box if it is negative indicating it is next to a bomb and has been clicked on
+            if grid[row][column] < 0:
                 text = font.render(str(abs(grid[row][column])), True, BLACK)
                 text_rect = text.get_rect(center=((column * 25) + WIDTH // 2 + 5, (row * 25) + HEIGHT // 2 + 5))
                 screen.blit(text, text_rect)
-    # 
-    # text = font.render(str(grid[x][y]),True,BLACK)
-    # screen.blit(text, [x * 25, y * 25])
-    # screen.blit(screen, [100, 100])
- 
+                
     # --- Go ahead and update the screen with what we've drawn.
     pygame.display.flip()
  
