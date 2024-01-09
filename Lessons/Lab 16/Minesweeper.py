@@ -124,8 +124,17 @@ while not done:
         if event.type == pygame.QUIT:
             done = True
 
-        # Left Click
-        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == LEFT:
+        # Click Down
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            pos = pygame.mouse.get_pos()
+            y = pos[0] // 25
+            x = pos[1] // 25
+
+            # grid[x][y] += 50
+
+
+        # Left Click Up
+        elif event.type == pygame.MOUSEBUTTONUP and event.button == LEFT:
             pos = pygame.mouse.get_pos()
             y = pos[0] // 25
             x = pos[1] // 25
@@ -210,6 +219,9 @@ while not done:
     for row in range(10):
         for column in range(10):
             color = (170, 170, 170)
+
+            if grid[row][column] >= 50:
+                color = (0,0,0)
 
             # Change background to white for all empty squares that have been clicked on
             if grid[row][column] == 9 :
