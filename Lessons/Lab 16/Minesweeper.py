@@ -109,6 +109,9 @@ def check_adjacent_cells(x, y):
 # Loop until the user clicks the close button.
 done = False
 mineCount = 10
+down = False
+left = False
+right = False
  
 # Used to manage how fast the screen updates
 clock = pygame.time.Clock()
@@ -118,6 +121,7 @@ while not done:
     # --- Main event loop
     x = xSafe
     y = ySafe
+    down = False
 
 
     for event in pygame.event.get():
@@ -129,16 +133,22 @@ while not done:
             pos = pygame.mouse.get_pos()
             y = pos[0] // 25
             x = pos[1] // 25
+            down = True
+            if event.button == LEFT:
+                left = True
+            if event.button == RIGHT:
+                right = True
 
             # grid[x][y] += 50
 
 
         # Left Click Up
-        elif event.type == pygame.MOUSEBUTTONUP and event.button == LEFT:
+        elif event.type == pygame.MOUSEBUTTONUP and event.button == LEFT and not right:
             pos = pygame.mouse.get_pos()
             y = pos[0] // 25
             x = pos[1] // 25
             print("Click: (%s,%s) Value: %s"%(x,y,grid[x][y]))
+            left = False
 
             # If left click on bomb game over
             if grid[x][y] == 10:
@@ -150,19 +160,6 @@ while not done:
                 grid[x][y] *= -1
                 xSafe = x
                 ySafe = y
-
-            # If left click revealed tile reveal surrounding tiles even if one is a bomb
-            elif grid[x][y] < 0:
-                for i in (-1, 0, 1):
-                    for j in (-1, 0, 1):
-                        if x + i >= 0 and y + j >= 0 and x + i <= 9 and y + j <= 9:
-                            if grid[x + i][y + j] == 10:
-                                print("Game Over")
-                                done = True
-                            elif grid[x + i][y + j] == 0:
-                                check_adjacent_cells(x, y)
-                            elif grid[x + i][y + j] > 0 and grid[x + i][y + j] < 9:
-                                grid[x + i][y + j] *= -1
             
             # If square is empty reveal surrounding empty squares
             elif grid[x][y] == 0:
@@ -172,11 +169,12 @@ while not done:
                 check_adjacent_cells(x, y)
 
         # Right Click
-        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == RIGHT:
+        elif event.type == pygame.MOUSEBUTTONUP and event.button == RIGHT and not left:
             pos = pygame.mouse.get_pos()
             y = pos[0] // 25
             x = pos[1] // 25
             print("Bomb Marked")
+            right = False
 
             # Mark only squares that are unrevaled as possible bomb locations
             if grid[x][y] == 10:
@@ -187,6 +185,29 @@ while not done:
                 grid[x][y] = 10
             elif grid[x][y] < 20 and grid[x][y] > 10:
                 grid[x][y] -= 10
+
+           # Both Left and Right Click
+        elif event.type == pygame.MOUSEBUTTONUP and left and right:
+            pos = pygame.mouse.get_pos()
+            y = pos[0] // 25
+            x = pos[1] // 25
+            right = False
+            left = False
+
+            # If both click revealed tile reveal surrounding tiles even if one is a bomb
+            if grid[x][y] < 0:
+                for i in (-1, 0, 1):
+                    for j in (-1, 0, 1):
+                        if x + i >= 0 and y + j >= 0 and x + i <= 9 and y + j <= 9:
+                            if grid[x + i][y + j] == 10:
+                                print("Game Over")
+                                done = True
+                            elif grid[x + i][y + j] == 0:
+                                check_adjacent_cells(x, y)
+                            elif grid[x + i][y + j] > 0 and grid[x + i][y + j] < 9:
+                                grid[x + i][y + j] *= -1
+
+            
 
             
     # If you want a background image, replace this clear with blit'ing the
@@ -250,6 +271,9 @@ while not done:
                 text = font.render(str(abs(grid[row][column])), True, BLACK)
                 text_rect = text.get_rect(center=((column * 25) + WIDTH // 2 + 5, (row * 25) + HEIGHT // 2 + 5))
                 screen.blit(text, text_rect)
+    
+    # if down == True:
+        
 
     # --- Go ahead and update the screen with what we've drawn.
     pygame.display.flip()
